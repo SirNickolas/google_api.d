@@ -1,0 +1,16 @@
+name        "google-api"
+description "Unofficial bindings to Google APIs."
+authors     "Nickolay Bukreyev"
+copyright   "Copyright © 2024, Nickolay Bukreyev"
+license     "MIT"
+
+toolchainRequirements frontend=">=2.075"
+
+targetPath "build"
+
+configuration "library"
+
+configuration "unittest" {
+    sourcePaths "test"
+    importPaths "test"
+}
