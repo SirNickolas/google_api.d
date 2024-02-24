@@ -6,11 +6,12 @@ public import fastjwt.jwt: JWTAlgorithm;
 @safe:
 
 ///
-nothrow pure unittest {
+nothrow pure @nogc unittest {
     import google_api.auth.service_account: TokenManagerConfig;
 
+    FastJwtSigner signer;
     TokenManagerConfig cfg = {
-        signer: &new FastJwtSigner().sign,
+        signer: &signer.sign,
     };
 }
 

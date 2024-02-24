@@ -1,8 +1,8 @@
-name "extra-fastjwt"
+name "extra-vibe-http"
 
-dependency "fastjwt" version="^2.0.0"
 dependency "google-api" path=".."
-dependency "stringbuffer" version="^1.1.0"
+dependency "vibe-http" version="^1.0.0"
+dependency "vibe-stream" version="^1.0.0"
 
 targetPath "build"
 

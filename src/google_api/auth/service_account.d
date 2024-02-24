@@ -1,5 +1,8 @@
 module google_api.auth.service_account;
 
+///
+public import google_api.http;
+
 @safe:
 
 ///
@@ -35,35 +38,12 @@ struct TokenManagerConfig {
         scope void delegate(scope const(char)[ ] base64) @safe,
     ) @safe signer;
     ///
-    string delegate(scope string url, scope const(char)[ ] postData) @safe requester;
+    IHttpClient client;
     /// How long the generated token will be valid.
     Duration duration = 1.hours; // Maximal allowed by Google.
     /// We consider the token expired before it actually does, to be safe against network delays and
     /// imprecise timing. Its effective life time is `duration - handicap`.
     Duration handicap = 30.seconds;
-}
-
-///
-immutable defaultRequester = delegate(scope string url, scope const(char)[ ] data) @trusted {
-    import vibe.http.client: HTTPMethod, requestHTTP;
-    import vibe.stream.operations: readAllUTF8;
-
-    string result;
-    // We need `@trusted` here because `vibe-http` disregards `scope`.
-    requestHTTP(url, (scope req) {
-        req.method = HTTPMethod.POST;
-        req.writeBody(cast(const(ubyte)[ ])data, "application/x-www-form-urlencoded");
-    }, (scope res) {
-        result = res.bodyReader.readAllUTF8();
-    });
-    return result;
-};
-
-///
-nothrow pure @nogc unittest {
-    TokenManagerConfig cfg = {
-        requester: defaultRequester,
-    };
 }
 
 ///
@@ -129,7 +109,7 @@ private struct _Response {
 struct TokenManager {
     import std.array: Appender;
     import std.typecons: Nullable;
-    import vibe.http.common: HTTPRequest; // TODO: Move to a subpackage.
+    // import vibe.http.common: HTTPRequest; // TODO: Move to `google-api:extra-vibe-http`.
 
     private {
         TokenManagerConfig _cfg;
@@ -139,7 +119,7 @@ struct TokenManager {
     }
 
     ///
-    this(return scope TokenManagerConfig cfg) scope inout nothrow pure @nogc
+    this(return scope inout TokenManagerConfig cfg) scope inout nothrow pure @nogc
     in(!cfg.handicap.isNegative)
     in(cfg.handicap < cfg.duration)
     do { _cfg = cfg; }
@@ -175,12 +155,21 @@ struct TokenManager {
 
     private string _requestToken(scope const JwtClaims claims) scope {
         import vibe.data.json: deserializeJson;
+        import google_api.utils: validateUtf;
 
         _postData.clear();
         _postData ~= "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=";
         _cfg.signer(_cfg.credentials, claims, (signed) { _postData ~= signed; });
-        return _cfg
-            .requester(_cfg.credentials.tokenUri, _postData[ ])
+
+        HttpRequestParams params = {
+            method: HttpMethod.post,
+            url: _cfg.credentials.tokenUri,
+            contentType: "application/x-www-form-urlencoded",
+        };
+        // TODO: Pass an `InputStream` instead of accumulating data in a buffer.
+        return _cfg.client
+            .request(params, cast(const(ubyte)[ ])_postData[ ])
+            .validateUtf()
             .deserializeJson!_Response()
             .accessToken;
     }
@@ -201,8 +190,10 @@ struct TokenManager {
     ///
     string getToken() scope { return getHttpBearer()[7 .. $]; }
 
+    /+
     ///
     void authenticate(scope HTTPRequest req) scope {
         req.headers.addField("Authorization", getHttpBearer());
     }
+    +/
 }
