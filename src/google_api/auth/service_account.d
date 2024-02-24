@@ -109,7 +109,6 @@ private struct _Response {
 struct TokenManager {
     import std.array: Appender;
     import std.typecons: Nullable;
-    // import vibe.http.common: HTTPRequest; // TODO: Move to `google-api:extra-vibe-http`.
 
     private {
         TokenManagerConfig _cfg;
@@ -118,13 +117,13 @@ struct TokenManager {
         long _expirationTime;
     }
 
+    @disable this(this);
+
     ///
     this(return scope inout TokenManagerConfig cfg) scope inout nothrow pure @nogc
     in(!cfg.handicap.isNegative)
     in(cfg.handicap < cfg.duration)
     do { _cfg = cfg; }
-
-    @disable this(this);
 
     ///
     @property long expirationStdTime() scope const nothrow pure @nogc {
@@ -189,11 +188,4 @@ struct TokenManager {
 
     ///
     string getToken() scope { return getHttpBearer()[7 .. $]; }
-
-    /+
-    ///
-    void authenticate(scope HTTPRequest req) scope {
-        req.headers.addField("Authorization", getHttpBearer());
-    }
-    +/
 }

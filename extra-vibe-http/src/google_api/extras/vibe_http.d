@@ -3,20 +3,19 @@ module google_api.extras.vibe_http;
 ///
 public import google_api.http;
 
-@safe:
-
 ///
-nothrow pure @nogc unittest {
-    import google_api.auth.service_account: TokenManagerConfig;
+nothrow pure @safe @nogc unittest {
+    import google_api.auth.service_account: TokenManager, TokenManagerConfig;
 
     scope client = new VibeHttpClient;
     TokenManagerConfig cfg = {
         client: client,
     };
+    scope auth = vibeAuthenticator(TokenManager(cfg));
 }
 
 ///
-class VibeHttpClient: IHttpClient {
+@safe class VibeHttpClient: IHttpClient {
     import vibe.http.client: HTTPClientRequest;
 
     ///
@@ -63,4 +62,24 @@ class VibeHttpClient: IHttpClient {
     ) scope {
         return request(params, (scope req) @trusted { req.writeBody(data); });
     }
+}
+
+///
+struct VibeAuthenticator(M) {
+    import vibe.http.common: HTTPRequest;
+
+    ///
+    M mgr;
+
+    ///
+    void authenticate(scope HTTPRequest req) {
+        req.headers.addField("Authorization", mgr.getHttpBearer());
+    }
+}
+
+/// ditto
+VibeAuthenticator!M vibeAuthenticator(M)(return scope M mgr) {
+    import core.lifetime: move;
+
+    return VibeAuthenticator!M(move(mgr));
 }
