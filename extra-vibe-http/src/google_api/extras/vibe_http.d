@@ -16,24 +16,29 @@ nothrow pure @safe @nogc unittest {
 
 ///
 @safe class VibeHttpClient: IHttpClient {
-    import vibe.http.client: HTTPClientRequest;
+    import vibe.http.client: HTTPClientRequest, HTTPMethod;
 
     ///
-    protected immutable(ubyte)[ ] request(
+    static HTTPMethod translateMethod(HttpMethod method) nothrow pure @nogc {
+        final switch (method) with (HttpMethod) {
+            case get:  return HTTPMethod.GET;
+            case post: return HTTPMethod.POST;
+        }
+    }
+
+    ///
+    immutable(ubyte)[ ] request(
         scope ref const HttpRequestParams params,
         scope void delegate(scope HTTPClientRequest) @safe requester,
     ) scope @trusted {
-        import vibe.http.client: HTTPMethod, requestHTTP;
+        import vibe.http.client: requestHTTP;
         import vibe.stream.operations: readAll;
 
         immutable(ubyte)[ ] result;
 
         // We need `@trusted` all over the place because `vibe-http` disregards `scope`.
         requestHTTP(params.url, (scope req) @trusted {
-            final switch (params.method) {
-                case HttpMethod.get:  req.method = HTTPMethod.GET;  break;
-                case HttpMethod.post: req.method = HTTPMethod.POST; break;
-            }
+            req.method = translateMethod(params.method);
             req.contentType = params.contentType;
             requester(req);
         }, (scope res) @trusted {
