@@ -4,7 +4,13 @@ authors     "Nickolay Bukreyev"
 copyright   "Copyright © 2024, Nickolay Bukreyev"
 license     "MIT"
 
-toolchainRequirements frontend=">=2.075"
+toolchainRequirements frontend=">=2.102"
+
+subPackage "./extra-fastjwt"
+
+dependency "vibe-http" version="~>1.0"
+dependency "vibe-serialization" version="~>1.0"
+dependency "vibe-stream" version="~>1.0"
 
 targetPath "build"
 
@@ -13,4 +19,6 @@ configuration "library"
 configuration "unittest" {
     sourcePaths "test"
     importPaths "test"
+
+    dflags "-dip1000"
 }
