@@ -33,9 +33,8 @@ struct TokenManagerConfig {
     string scopes;
     ///
     void delegate(
-        scope ref const Credentials,
         scope ref const JwtClaims,
-        scope void delegate(scope const(char)[ ] base64) @safe,
+        scope void delegate(scope const(char)[ ] encoded) @safe,
     ) @safe signer;
     ///
     IHttpClient client;
@@ -158,7 +157,7 @@ struct TokenManager {
 
         _postData.clear();
         _postData ~= "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=";
-        _cfg.signer(_cfg.credentials, claims, (signed) { _postData ~= signed; });
+        _cfg.signer(claims, (signed) { _postData ~= signed; });
 
         HttpRequestParams params = {
             method: HttpMethod.post,

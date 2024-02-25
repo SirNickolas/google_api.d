@@ -32,23 +32,22 @@ struct DerelictJwtSigner {
     import google_api.auth.service_account: Credentials, JwtClaims;
 
     private {
-        int _algo;
-        jwt_t* _jwt;
         Appender!(char[ ]) _payload;
+        jwt_t* _jwt;
     }
 
     @disable this();
     @disable this(this);
 
     ///
-    this(int algo) scope @trusted
-    out(; _jwt !is null)
-    do {
+    this(scope ref const Credentials credentials, int algo = JWT_ALG_RS256) scope @trusted {
         import std.array: appender;
+        import std.conv: to;
 
-        _algo = algo;
-        jwt_new(&_jwt)._enforce0("`jwt_new` failed");
         _payload = appender!(char[ ]);
+        jwt_new(&_jwt)._enforce0("`jwt_new` failed");
+        jwt_set_alg(_jwt, algo, credentials.privateKey.ptr, credentials.privateKey.length.to!int)
+            ._enforce0("`jwt_set_alg` failed");
     }
 
     ~this() scope nothrow @trusted @nogc {
@@ -57,21 +56,15 @@ struct DerelictJwtSigner {
 
     ///
     void sign(
-        scope ref const Credentials credentials,
         scope ref const JwtClaims claims,
         scope void delegate(scope const(char)[ ]) @safe onSuccess,
     ) scope @trusted
     in(_jwt !is null)
     do {
         import core.stdc.stdlib: free;
-        import std.conv: to;
         import std.exception: errnoEnforce;
         import std.string: fromStringz;
         import vibe.data.json: serializeToJson;
-
-        // TODO: Pass `credentials` to the constructor, not to `sign`.
-        jwt_set_alg(_jwt, _algo, credentials.privateKey.ptr, credentials.privateKey.length.to!int)
-            ._enforce0("`jwt_set_alg` failed");
 
         // We have to communicate with `libjwt` via JSON because `jwt_add_grant_int` (which we would
         // need for `iat` and `exp`) takes a C `long`, which is only 32-bit-wide on some systems.
