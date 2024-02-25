@@ -29,29 +29,29 @@ struct DerelictJwtSigner {
     import std.array: Appender;
     import derelict.jwt.jwtfuncs;
     import derelict.jwt.jwttypes: jwt_t;
-    import google_api.auth.service_account: Credentials, JwtClaims;
+    import google_api.auth.service_account: JwtClaims;
 
     private {
         Appender!(char[ ]) _payload;
-        jwt_t* _jwt;
+        jwt_t* _j;
     }
 
     @disable this();
     @disable this(this);
 
     ///
-    this(scope ref const Credentials credentials, int algo = JWT_ALG_RS256) scope @trusted {
+    this(scope const(char)[ ] key, int algo = JWT_ALG_RS256) scope @trusted {
         import std.array: appender;
         import std.conv: to;
 
         _payload = appender!(char[ ]);
-        jwt_new(&_jwt)._enforce0("`jwt_new` failed");
-        jwt_set_alg(_jwt, algo, credentials.privateKey.ptr, credentials.privateKey.length.to!int)
-            ._enforce0("`jwt_set_alg` failed");
+        _payload.reserve(224);
+        jwt_new(&_j)._enforce0("`jwt_new` failed");
+        jwt_set_alg(_j, algo, key.ptr, key.length.to!int)._enforce0("`jwt_set_alg` failed");
     }
 
     ~this() scope nothrow @trusted @nogc {
-        jwt_free(_jwt);
+        jwt_free(_j);
     }
 
     ///
@@ -59,7 +59,7 @@ struct DerelictJwtSigner {
         scope ref const JwtClaims claims,
         scope void delegate(scope const(char)[ ]) @safe onSuccess,
     ) scope @trusted
-    in(_jwt !is null)
+    in(_j !is null)
     do {
         import core.stdc.stdlib: free;
         import std.exception: errnoEnforce;
@@ -73,14 +73,44 @@ struct DerelictJwtSigner {
         _payload.clear();
         _payload.serializeToJson(claims);
         _payload ~= '\0';
-        jwt_add_grants_json(_jwt, _payload[ ].ptr)._enforce0("`jwt_add_grants_json` failed");
+        jwt_add_grants_json(_j, _payload[ ].ptr)._enforce0("`jwt_add_grants_json` failed");
 
-        char* signed = jwt_encode_str(_jwt).errnoEnforce("`jwt_encode_str` failed");
+        char* signed = jwt_encode_str(_j).errnoEnforce("`jwt_encode_str` failed");
         // We should be freeing the string via `jwt_free_str`, but `derelict.jwt` does not bind it.
         // Therefore, we'll misbehave if the allocator has been changed via `jwt_set_alloc`
         // (somehow; that function isn't bound either).
         scope(exit) free(signed);
 
         onSuccess(signed.fromStringz());
+    }
+}
+
+///
+struct DerelictJwtSigner1 {
+    import google_api.auth.service_account: JwtClaims;
+
+    private {
+        immutable(char)* _key;
+        int _keyLength;
+        int _algo;
+    }
+
+    @disable this();
+
+    ///
+    this(return scope string key, int algo = JWT_ALG_RS256) scope inout pure {
+        import std.conv: to;
+
+        _key = &key[0];
+        _keyLength = key.length.to!int;
+        _algo = algo;
+    }
+
+    ///
+    void sign(
+        scope ref const JwtClaims claims,
+        scope void delegate(scope const(char)[ ]) @safe onSuccess,
+    ) scope const @trusted {
+        DerelictJwtSigner(_key[0 .. _keyLength], _algo).sign(claims, onSuccess);
     }
 }
