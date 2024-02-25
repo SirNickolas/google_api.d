@@ -1,8 +1,8 @@
 name "extra-derelict-jwt"
 
-dependency "derelict_extras-jwt" version="^1.0.0"
+dependency "derelict_extras-jwt" version=">=1.0.0"
 dependency "google-api" path=".."
-dependency "vibe-serialization" version="^1.0.0"
+dependency "vibe-serialization" version=">=1.0.0"
 
 targetPath "build"
 

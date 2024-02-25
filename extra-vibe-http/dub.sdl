@@ -1,8 +1,8 @@
 name "extra-vibe-http"
 
 dependency "google-api" path=".."
-dependency "vibe-http" version="^1.0.0"
-dependency "vibe-stream" version="^1.0.0"
+dependency "vibe-http" version=">=1.0.0"
+dependency "vibe-stream" version=">=1.0.0"
 
 targetPath "build"
 

@@ -9,8 +9,8 @@ toolchainRequirements frontend=">=2.102"
 subPackage "./extra-derelict-jwt"
 subPackage "./extra-vibe-http"
 
-dependency "vibe-core" version="^2.8.0"
-dependency "vibe-serialization" version="^1.0.0"
+dependency "vibe-core" version=">=2.8.0"
+dependency "vibe-serialization" version=">=1.0.0"
 
 targetPath "build"
 
