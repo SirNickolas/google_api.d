@@ -18,6 +18,7 @@ struct HttpRequestParams {
     string contentType; ///
 }
 
+///
 interface IHttpClient {
     ///
     immutable(ubyte)[ ] request(scope ref const HttpRequestParams, scope InputStream) scope;
@@ -34,5 +35,25 @@ interface IHttpClient {
         scope ref const HttpRequestParams params, scope RandomAccessStream data,
     ) scope @trusted {
         return request(params, data, data.size - data.tell());
+    }
+}
+
+///
+class HttpRequestException: Exception {
+    ///
+    int status;
+
+    ///
+    this(
+        int status,
+        string msg,
+        string file = __FILE__,
+        size_t line = __LINE__,
+        Throwable next = null,
+    ) nothrow pure {
+        import google_api.utils: concat;
+
+        super(concat(status, ": ", msg), file, line, next);
+        this.status = status;
     }
 }
