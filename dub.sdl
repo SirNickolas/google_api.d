@@ -6,6 +6,7 @@ license     "MIT"
 
 toolchainRequirements frontend=">=2.102"
 
+subPackage "./extra-derelict-jwt"
 subPackage "./extra-fastjwt"
 subPackage "./extra-vibe-http"
 
