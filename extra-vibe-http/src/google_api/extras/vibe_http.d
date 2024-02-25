@@ -42,9 +42,9 @@ nothrow pure @safe @nogc unittest {
             req.contentType = params.contentType;
             requester(req);
         }, (scope res) @trusted {
-            res.readRawBody((scope InputStream stream) @trusted {
-                result = cast(immutable)stream.readAll();
-            });
+            result = cast(immutable)res.bodyReader.readAll();
+            if (res.statusCode < 200 || res.statusCode >= 300)
+                throw new HttpRequestException(res.statusCode, cast(string)result);
         });
 
         return result;
