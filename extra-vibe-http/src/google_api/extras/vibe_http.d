@@ -3,20 +3,30 @@ module google_api.extras.vibe_http;
 ///
 public import google_api.http;
 
+import vibe.http.client: HTTPClientRequest, HTTPClientResponse;
+import google_api.utils: delegate_;
+
+@safe:
+
 ///
-nothrow pure @safe @nogc unittest {
+nothrow pure @nogc unittest {
     import google_api.auth.service_account: TokenManager, TokenManagerConfig;
 
-    scope client = new VibeHttpClient;
+    scope authClient = new VibeHookingHttpClient(vibeNopMiddleware, vibeResponseReader);
     TokenManagerConfig cfg = {
-        client: client,
+        client: authClient,
     };
-    scope auth = vibeAuthenticator(TokenManager(cfg));
+    auto tokenMgr = TokenManager(cfg);
+    VibeAuthenticator auth = {
+        (() @trusted => &tokenMgr.getHttpBearer)(),
+        vibeNopMiddleware,
+    };
+    scope client = new VibeHookingHttpClient((() @trusted => &auth.process)(), vibeResponseReader);
 }
 
 ///
-@safe class VibeHttpClient: IHttpClient {
-    import vibe.http.client: HTTPClientRequest, HTTPMethod;
+abstract class VibeHttpClient: IHttpClient {
+    import vibe.http.client: HTTPMethod;
 
     ///
     static HTTPMethod translateMethod(HttpMethod method) nothrow pure @nogc {
@@ -27,28 +37,10 @@ nothrow pure @safe @nogc unittest {
     }
 
     ///
-    immutable(ubyte)[ ] request(
-        scope ref const HttpRequestParams params,
-        scope void delegate(scope HTTPClientRequest) @safe requester,
-    ) scope @trusted {
-        import vibe.http.client: requestHTTP;
-        import vibe.stream.operations: readAll;
-
-        immutable(ubyte)[ ] result;
-
-        // We need `@trusted` all over the place because `vibe-http` disregards `scope`.
-        requestHTTP(params.url, (scope req) @trusted {
-            req.method = translateMethod(params.method);
-            req.contentType = params.contentType;
-            requester(req);
-        }, (scope res) @trusted {
-            result = cast(immutable)res.bodyReader.readAll();
-            if (res.statusCode < 200 || res.statusCode >= 300)
-                throw new HttpRequestException(res.statusCode, cast(string)result);
-        });
-
-        return result;
-    }
+    abstract immutable(ubyte)[ ] request(
+        scope ref const HttpRequestParams,
+        scope void delegate(scope HTTPClientRequest) @safe,
+    ) scope;
 
     final immutable(ubyte)[ ] request(
         scope ref const HttpRequestParams params, scope InputStream data,
@@ -70,21 +62,74 @@ nothrow pure @safe @nogc unittest {
 }
 
 ///
-struct VibeAuthenticator(M) {
-    import vibe.http.common: HTTPRequest;
+alias VibeMiddleware = void delegate(scope HTTPClientRequest, scope void delegate() @safe) @safe;
+
+///
+class VibeHookingHttpClient: VibeHttpClient {
+    private {
+        VibeMiddleware _middleware;
+        immutable(ubyte)[ ] delegate(scope HTTPClientResponse) @safe _responseReader;
+    }
 
     ///
-    M mgr;
+    this(
+        VibeMiddleware middleware,
+        immutable(ubyte)[ ] delegate(scope HTTPClientResponse) @safe responseReader,
+    ) scope inout nothrow pure @nogc {
+        _middleware = middleware;
+        _responseReader = responseReader;
+    }
 
     ///
-    void authenticate(scope HTTPRequest req) {
-        req.headers.addField("Authorization", mgr.getHttpBearer());
+    override immutable(ubyte)[ ] request(
+        scope ref const HttpRequestParams params,
+        scope void delegate(scope HTTPClientRequest) @safe bodyWriter,
+    ) scope @trusted {
+        import vibe.http.client: requestHTTP;
+
+        immutable(ubyte)[ ] result;
+
+        // We need `@trusted` all over the place because `vibe-http` disregards `scope`.
+        requestHTTP(params.url, (scope req) @trusted {
+            req.method = translateMethod(params.method);
+            req.contentType = params.contentType;
+            _middleware(req, { bodyWriter(req); });
+        }, (scope res) @safe {
+            result = _responseReader(res);
+        });
+
+        return result;
     }
 }
 
-/// ditto
-VibeAuthenticator!M vibeAuthenticator(M)(return scope M mgr) {
-    import core.lifetime: move;
+///
+alias vibeNopMiddleware =
+delegate_!((scope .HTTPClientRequest, scope void delegate() @safe bodyWriter) {
+    bodyWriter();
+});
 
-    return VibeAuthenticator!M(move(mgr));
+///
+struct VibeAuthenticator {
+    private {
+        string delegate() @safe _bearerFactory;
+        VibeMiddleware _next;
+    }
+
+    ///
+    void process(
+        scope HTTPClientRequest req,
+        scope void delegate() @safe bodyWriter,
+    ) scope {
+        req.headers.addField("Authorization", _bearerFactory());
+        _next(req, bodyWriter);
+    }
 }
+
+///
+alias vibeResponseReader = delegate_!((scope HTTPClientResponse res) {
+    import vibe.stream.operations: readAll;
+
+    const result = (() @trusted => cast(immutable)res.bodyReader.readAll())();
+    enforceHttpStatus(res.statusCode, cast(string)result);
+    return result;
+});

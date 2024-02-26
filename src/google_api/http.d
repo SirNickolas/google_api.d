@@ -57,3 +57,10 @@ class HttpRequestException: Exception {
         this.status = status;
     }
 }
+
+///
+void enforceHttpStatus(int status, string msg, string file = __FILE__, size_t line = __LINE__)
+pure {
+    if (status < 200 || status >= 300)
+        throw new HttpRequestException(status, msg, file, line);
+}
