@@ -3,21 +3,6 @@ module google_api.utils;
 @safe:
 
 ///
-pragma(inline, true)
-@property auto delegate_(alias func)() nothrow pure @nogc {
-    static struct S {
-        static if (is(typeof(func) P == __parameters) || is(typeof(*func) P == __parameters))
-            auto ref f(P args) scope {
-                return func(args);
-            }
-        else
-            static assert(false, "`", func, "` must not have untyped parameters");
-    }
-
-    return &(S*).init.f;
-}
-
-///
 inout(char)[ ] validateUtf(return scope inout(ubyte)[ ] data) pure {
     import std.utf: validate;
 

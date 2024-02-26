@@ -4,7 +4,6 @@ module google_api.extras.vibe_http;
 public import google_api.http;
 
 import vibe.http.client: HTTPClientRequest, HTTPClientResponse;
-import google_api.utils: delegate_;
 
 @safe:
 
@@ -103,10 +102,10 @@ class VibeHookingHttpClient: VibeHttpClient {
 }
 
 ///
-alias vibeNopMiddleware =
-delegate_!((scope .HTTPClientRequest, scope void delegate() @safe bodyWriter) {
+immutable vibeNopMiddleware =
+delegate(scope .HTTPClientRequest, scope void delegate() @safe bodyWriter) {
     bodyWriter();
-});
+};
 
 ///
 struct VibeAuthenticator {
@@ -126,10 +125,10 @@ struct VibeAuthenticator {
 }
 
 ///
-alias vibeResponseReader = delegate_!((scope HTTPClientResponse res) {
+immutable vibeResponseReader = delegate immutable(ubyte)[ ](scope HTTPClientResponse res) {
     import vibe.stream.operations: readAll;
 
     const result = (() @trusted => cast(immutable)res.bodyReader.readAll())();
     enforceHttpStatus(res.statusCode, cast(string)result);
     return result;
-});
+};
