@@ -99,6 +99,8 @@ class VibeHookingHttpClient: VibeHttpClient {
 
         return result;
     }
+
+    alias request = typeof(super).request;
 }
 
 ///
