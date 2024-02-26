@@ -20,7 +20,7 @@ nothrow pure @nogc unittest {
         (() @trusted => &tokenMgr.getHttpBearer)(),
         vibeNopMiddleware,
     };
-    scope client = new VibeHookingHttpClient((() @trusted => &auth.process)(), vibeResponseReader);
+    scope client = new VibeHookingHttpClient((() @trusted => &auth.handle)(), vibeResponseReader);
 }
 
 ///
@@ -61,7 +61,10 @@ abstract class VibeHttpClient: IHttpClient {
 }
 
 ///
-alias VibeMiddleware = void delegate(scope HTTPClientRequest, scope void delegate() @safe) @safe;
+alias VibeMiddleware = void delegate(
+    scope HTTPClientRequest,
+    scope void delegate(scope HTTPClientRequest) @safe,
+) @safe;
 
 ///
 class VibeHookingHttpClient: VibeHttpClient {
@@ -92,7 +95,7 @@ class VibeHookingHttpClient: VibeHttpClient {
         requestHTTP(params.url, (scope req) @trusted {
             req.method = translateMethod(params.method);
             req.contentType = params.contentType;
-            _middleware(req, { bodyWriter(req); });
+            _middleware(req, bodyWriter);
         }, (scope res) @safe {
             result = _responseReader(res);
         });
@@ -104,9 +107,11 @@ class VibeHookingHttpClient: VibeHttpClient {
 }
 
 ///
-immutable vibeNopMiddleware =
-delegate(scope .HTTPClientRequest, scope void delegate() @safe bodyWriter) {
-    bodyWriter();
+immutable vibeNopMiddleware = delegate(
+    scope HTTPClientRequest req,
+    scope void delegate(scope HTTPClientRequest) @safe bodyWriter,
+) {
+    bodyWriter(req);
 };
 
 ///
@@ -117,9 +122,9 @@ struct VibeAuthenticator {
     }
 
     ///
-    void process(
+    void handle(
         scope HTTPClientRequest req,
-        scope void delegate() @safe bodyWriter,
+        scope void delegate(scope HTTPClientRequest) @safe bodyWriter,
     ) scope {
         req.headers.addField("Authorization", _bearerFactory());
         _next(req, bodyWriter);
