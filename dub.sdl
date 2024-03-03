@@ -14,11 +14,11 @@ dependency "vibe-serialization" version=">=1.0.0"
 
 targetPath "build"
 
+dflags "-dip1000" "-preview=fixImmutableConv"
+
 configuration "library"
 
 configuration "unittest" {
     sourcePaths "test"
     importPaths "test"
-
-    dflags "-dip1000"
 }

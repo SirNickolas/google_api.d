@@ -5,8 +5,4 @@ dependency "google-api" path=".."
 
 targetPath "build"
 
-configuration "library"
-
-configuration "unittest" {
-    dflags "-dip1000"
-}
+dflags "-dip1000" "-preview=fixImmutableConv"
