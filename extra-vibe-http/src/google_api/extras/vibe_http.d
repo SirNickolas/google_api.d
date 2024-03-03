@@ -113,9 +113,7 @@ class VibeHookingHttpClient: VibeHttpClient {
 immutable vibeNopMiddleware = delegate(
     scope HTTPClientRequest req,
     scope void delegate(scope HTTPClientRequest) @safe bodyWriter,
-) {
-    bodyWriter(req);
-};
+) => bodyWriter(req);
 
 ///
 struct VibeAuthenticator {

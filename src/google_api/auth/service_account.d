@@ -186,5 +186,5 @@ struct TokenManager {
     }
 
     ///
-    string getToken() scope { return getHttpBearer()[7 .. $]; }
+    string getToken() scope => getHttpBearer()[7 .. $];
 }
