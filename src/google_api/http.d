@@ -67,3 +67,20 @@ pure {
     if (status < 200 || status >= 300)
         throw new HttpRequestException(status, msg, file, line);
 }
+
+///
+struct GoogleHttpClient {
+    import std.array: Appender;
+
+    IHttpClient impl;
+    Appender!(char[ ]) buffer;
+}
+
+///
+GoogleHttpClient googleHttpClient(return scope IHttpClient impl) nothrow pure {
+    import std.array: appender;
+
+    auto app = appender!(char[ ]);
+    app.reserve(512); // TODO: Select optimal size.
+    return GoogleHttpClient(impl, app);
+}
