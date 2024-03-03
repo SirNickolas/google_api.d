@@ -8,7 +8,10 @@ public import vibe.core.stream: InputStream, RandomAccessStream;
 ///
 enum HttpMethod {
     get, ///
+    put, ///
     post, ///
+    patch, ///
+    delete_, ///
 }
 
 ///

@@ -30,8 +30,11 @@ abstract class VibeHttpClient: IHttpClient {
     ///
     static HTTPMethod translateMethod(HttpMethod method) nothrow pure @nogc {
         final switch (method) with (HttpMethod) {
-            case get:  return HTTPMethod.GET;
-            case post: return HTTPMethod.POST;
+            case get:     return HTTPMethod.GET;
+            case put:     return HTTPMethod.PUT;
+            case post:    return HTTPMethod.POST;
+            case patch:   return HTTPMethod.PATCH;
+            case delete_: return HTTPMethod.DELETE;
         }
     }
 
