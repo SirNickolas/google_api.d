@@ -1,4 +1,4 @@
-module google_api.utils;
+module google_api.d.utils;
 
 @safe:
 

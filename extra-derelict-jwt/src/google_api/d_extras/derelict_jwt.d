@@ -1,4 +1,4 @@
-module google_api.extras.derelict_jwt;
+module google_api.d_extras.derelict_jwt;
 
 ///
 public import derelict.jwt.jwt: DerelictJWT;
@@ -29,7 +29,7 @@ struct DerelictJwtSigner {
     import std.array: Appender;
     import derelict.jwt.jwtfuncs;
     import derelict.jwt.jwttypes: jwt_t;
-    import google_api.auth.service_account: JwtClaims;
+    import google_api.d.auth.service_account: JwtClaims;
 
     private {
         Appender!(char[ ]) _payload;
@@ -87,7 +87,7 @@ struct DerelictJwtSigner {
 
 ///
 struct DerelictJwtSigner1 {
-    import google_api.auth.service_account: JwtClaims;
+    import google_api.d.auth.service_account: JwtClaims;
 
     private {
         immutable(char)* _key;

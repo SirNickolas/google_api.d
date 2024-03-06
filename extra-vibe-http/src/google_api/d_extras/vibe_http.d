@@ -1,7 +1,7 @@
-module google_api.extras.vibe_http;
+module google_api.d_extras.vibe_http;
 
 ///
-public import google_api.http;
+public import google_api.d.http;
 
 import vibe.http.client: HTTPClientRequest, HTTPClientResponse;
 
@@ -9,7 +9,7 @@ import vibe.http.client: HTTPClientRequest, HTTPClientResponse;
 
 ///
 nothrow pure @nogc unittest {
-    import google_api.auth.service_account: TokenManager, TokenManagerConfig;
+    import google_api.d.auth.service_account: TokenManager, TokenManagerConfig;
 
     scope authClient = new VibeHookingHttpClient(vibeNopMiddleware, vibeResponseReader);
     TokenManagerConfig cfg = {
@@ -85,7 +85,6 @@ class VibeHookingHttpClient: VibeHttpClient {
         _responseReader = responseReader;
     }
 
-    ///
     override immutable(ubyte)[ ] request(
         scope ref const HttpRequestParams params,
         scope void delegate(scope HTTPClientRequest) @safe bodyWriter,

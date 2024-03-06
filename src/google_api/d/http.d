@@ -1,4 +1,4 @@
-module google_api.http;
+module google_api.d.http;
 
 ///
 public import vibe.core.stream: InputStream, RandomAccessStream;
@@ -54,7 +54,7 @@ class HttpRequestException: Exception {
         size_t line = __LINE__,
         Throwable next = null,
     ) nothrow pure {
-        import google_api.utils: concat;
+        import google_api.d.utils: concat;
 
         super(concat(status, ": ", msg), file, line, next);
         this.status = status;

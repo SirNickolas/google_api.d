@@ -1,11 +1,11 @@
-module google_api.test;
+module google_api.d.test;
 
-import google_api.http;
-import google_api.utils;
+import google_api.d.http;
+import google_api.d.utils;
 
 @safe:
 
-// google_api.utils.validateUtf:
+// google_api.d.utils.validateUtf:
 
 pure unittest {
     import std.exception: assertThrown;
@@ -18,7 +18,7 @@ pure unittest {
     assertThrown!UTFException(validateUtf([0x80]));
 }
 
-// google_api.utils.concat:
+// google_api.d.utils.concat:
 
 nothrow pure unittest {
     immutable b = true;

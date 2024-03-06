@@ -1,7 +1,7 @@
-module google_api.auth.service_account;
+module google_api.d.auth.service_account;
 
 ///
-public import google_api.http;
+public import google_api.d.http;
 
 @safe:
 
@@ -153,7 +153,7 @@ struct TokenManager {
 
     private string _requestToken(scope const JwtClaims claims) scope {
         import vibe.data.json: deserializeJson;
-        import google_api.utils: validateUtf;
+        import google_api.d.utils: validateUtf;
 
         _postData.clear();
         _postData ~= "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=";
