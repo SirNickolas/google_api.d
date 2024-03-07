@@ -13,6 +13,7 @@ nothrow pure @nogc unittest {
 
     scope authClient = new VibeHookingHttpClient(vibeNopMiddleware, vibeResponseReader);
     TokenManagerConfig cfg = {
+        // ...
         client: authClient,
     };
     auto tokenMgr = TokenManager(cfg);
@@ -136,3 +137,16 @@ immutable vibeResponseReader = delegate ubyte[ ](scope HTTPClientResponse res) @
     enforceHttpStatus(res.statusCode, cast(string)result);
     return result;
 };
+
+///
+class VibeAuthenticatingHttpClient: VibeHookingHttpClient {
+    private VibeAuthenticator _auth;
+
+    ///
+    this(VibeAuthenticator auth, ubyte[ ] delegate(scope HTTPClientResponse) @safe responseReader)
+    scope nothrow pure @trusted @nogc {
+        _auth = auth;
+        // `this._auth` will not outlive `this` so it is safe.
+        super(&_auth.handle, responseReader);
+    }
+}
