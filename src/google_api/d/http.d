@@ -24,19 +24,17 @@ struct HttpRequestParams {
 ///
 interface IHttpClient {
     ///
-    immutable(ubyte)[ ] request(scope ref const HttpRequestParams, scope InputStream) scope;
+    ubyte[ ] request(scope ref const HttpRequestParams, scope InputStream) scope;
 
     /// ditto
-    immutable(ubyte)[ ] request(scope ref const HttpRequestParams, scope InputStream, ulong length)
-    scope;
+    ubyte[ ] request(scope ref const HttpRequestParams, scope InputStream, ulong length) scope;
 
     /// ditto
-    immutable(ubyte)[ ] request(scope ref const HttpRequestParams, scope const(ubyte)[ ]) scope;
+    ubyte[ ] request(scope ref const HttpRequestParams, scope const(ubyte)[ ]) scope;
 
     /// ditto
-    final immutable(ubyte)[ ] request(
-        scope ref const HttpRequestParams params, scope RandomAccessStream data,
-    ) scope @trusted {
+    final ubyte[ ] request(scope ref const HttpRequestParams params, scope RandomAccessStream data)
+    scope @trusted {
         return request(params, data, data.size - data.tell());
     }
 }

@@ -39,26 +39,23 @@ abstract class VibeHttpClient: IHttpClient {
     }
 
     ///
-    abstract immutable(ubyte)[ ] request(
+    abstract ubyte[ ] request(
         scope ref const HttpRequestParams,
         scope void delegate(scope HTTPClientRequest) @safe,
     ) scope;
 
-    final immutable(ubyte)[ ] request(
-        scope ref const HttpRequestParams params, scope InputStream data,
-    ) scope {
+    final ubyte[ ] request(scope ref const HttpRequestParams params, scope InputStream data) scope {
         return request(params, (scope req) @trusted { req.writeBody(data); });
     }
 
-    final immutable(ubyte)[ ] request(
+    final ubyte[ ] request(
         scope ref const HttpRequestParams params, scope InputStream data, ulong length,
     ) scope {
         return request(params, (scope req) @trusted { req.writeBody(data, length); });
     }
 
-    final immutable(ubyte)[ ] request(
-        scope ref const HttpRequestParams params, scope const(ubyte)[ ] data,
-    ) scope {
+    final ubyte[ ] request(scope ref const HttpRequestParams params, scope const(ubyte)[ ] data)
+    scope {
         return request(params, (scope req) @trusted { req.writeBody(data); });
     }
 }
@@ -73,25 +70,25 @@ alias VibeMiddleware = void delegate(
 class VibeHookingHttpClient: VibeHttpClient {
     private {
         VibeMiddleware _middleware;
-        immutable(ubyte)[ ] delegate(scope HTTPClientResponse) @safe _responseReader;
+        ubyte[ ] delegate(scope HTTPClientResponse) @safe _responseReader;
     }
 
     ///
     this(
         VibeMiddleware middleware,
-        immutable(ubyte)[ ] delegate(scope HTTPClientResponse) @safe responseReader,
+        ubyte[ ] delegate(scope HTTPClientResponse) @safe responseReader,
     ) scope inout nothrow pure @nogc {
         _middleware = middleware;
         _responseReader = responseReader;
     }
 
-    override immutable(ubyte)[ ] request(
+    override ubyte[ ] request(
         scope ref const HttpRequestParams params,
         scope void delegate(scope HTTPClientRequest) @safe bodyWriter,
     ) scope @trusted {
         import vibe.http.client: requestHTTP;
 
-        immutable(ubyte)[ ] result;
+        ubyte[ ] result;
 
         // We need `@trusted` all over the place because `vibe-http` disregards `scope`.
         requestHTTP(params.url, (scope req) @trusted {
@@ -109,7 +106,7 @@ class VibeHookingHttpClient: VibeHttpClient {
 }
 
 ///
-immutable vibeNopMiddleware = delegate(
+immutable vibeNopMiddleware = delegate void(
     scope HTTPClientRequest req,
     scope void delegate(scope HTTPClientRequest) @safe bodyWriter,
 ) => bodyWriter(req);
@@ -132,10 +129,10 @@ struct VibeAuthenticator {
 }
 
 ///
-immutable vibeResponseReader = delegate immutable(ubyte)[ ](scope HTTPClientResponse res) {
+immutable vibeResponseReader = delegate ubyte[ ](scope HTTPClientResponse res) @trusted {
     import vibe.stream.operations: readAll;
 
-    const result = (() @trusted => cast(immutable)res.bodyReader.readAll())();
+    auto result = res.bodyReader.readAll();
     enforceHttpStatus(res.statusCode, cast(string)result);
     return result;
 };
