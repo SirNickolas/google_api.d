@@ -1,7 +1,6 @@
 module google_api.d.http;
 
-///
-public import vibe.core.stream: InputStream, RandomAccessStream;
+public import vibe.core.stream: InputStream, RandomAccessStream; ///
 
 @safe:
 
@@ -68,17 +67,18 @@ pure {
 
 ///
 struct GoogleHttpClient {
-    import std.array: Appender;
+    import google_api.d.buffer;
 
-    IHttpClient impl;
-    Appender!(char[ ]) buffer;
-}
+    IHttpClient impl; ///
+    Buffer buffer; ///
 
-///
-GoogleHttpClient googleHttpClient(return scope IHttpClient impl) nothrow pure {
-    import std.array: appender;
+    ///
+    // TODO: Select optimal default size.
+    this(return scope IHttpClient impl, return scope Buffer buffer = createBuffer(512))
+    scope nothrow pure @nogc {
+        import core.lifetime: move;
 
-    auto app = appender!(char[ ]);
-    app.reserve(512); // TODO: Select optimal size.
-    return GoogleHttpClient(impl, app);
+        this.impl = impl;
+        this.buffer = move(buffer);
+    }
 }
