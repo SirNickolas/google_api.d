@@ -1,7 +1,6 @@
 module google_api.d.attributes;
 
-///
-public import vibe.data.serialization: byName, embedNullable, name, optional;
+public import vibe.data.serialization: byName, embedNullable, name, optional; ///
 
 ///
 enum base64Encoded;

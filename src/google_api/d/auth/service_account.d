@@ -1,7 +1,6 @@
 module google_api.d.auth.service_account;
 
-///
-public import google_api.d.http;
+public import google_api.d.http; ///
 
 @safe:
 

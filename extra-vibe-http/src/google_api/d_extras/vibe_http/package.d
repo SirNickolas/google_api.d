@@ -1,7 +1,6 @@
 module google_api.d_extras.vibe_http;
 
-///
-public import google_api.d.http;
+public import google_api.d.http; ///
 
 import vibe.http.client: HTTPClientRequest, HTTPClientResponse;
 
