@@ -20,7 +20,7 @@ class VibeTokenRequestingHttpClient: VibeAuthenticatingHttpClient {
         TokenManagerConfig cfg,
         VibeMiddleware middleware,
         ubyte[ ] delegate(scope HTTPClientResponse) @safe responseReader,
-    ) scope nothrow pure @trusted @nogc {
+    ) scope nothrow pure @trusted {
         _mgr = TokenManager(cfg);
         // `this._mgr` will not outlive `this` so it is safe.
         super(VibeAuthenticator(&_mgr.getHttpBearer, middleware), responseReader);

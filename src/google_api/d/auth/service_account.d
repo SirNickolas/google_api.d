@@ -105,12 +105,12 @@ private struct _Response {
 
 ///
 struct TokenManager {
-    import std.array: Appender;
     import std.typecons: Nullable;
+    import google_api.d.buffer;
 
     private {
         TokenManagerConfig _cfg;
-        Appender!(char[ ]) _postData;
+        Buffer _postData;
         _GcString _bearer;
         long _expirationTime;
     }
@@ -118,10 +118,13 @@ struct TokenManager {
     @disable this(this);
 
     ///
-    this(return scope inout TokenManagerConfig cfg) scope inout nothrow pure @nogc
+    this(return scope TokenManagerConfig cfg) scope nothrow pure
     in(!cfg.handicap.isNegative)
     in(cfg.handicap < cfg.duration)
-    do { _cfg = cfg; }
+    do {
+        _cfg = cfg;
+        _postData = createBuffer(704);
+    }
 
     ///
     @property long expirationStdTime() scope const nothrow pure @nogc {
@@ -165,7 +168,7 @@ struct TokenManager {
         };
         // TODO: Pass an `InputStream` instead of accumulating data in a buffer.
         return _cfg.client
-            .request(params, cast(const(ubyte)[ ])_postData[ ])
+            .request(params, cast(const(ubyte)[ ])(() @trusted => _postData[ ])())
             .validateUtf()
             .deserializeJson!_Response()
             .accessToken;

@@ -26,13 +26,13 @@ private void _enforce0(int code, string msg, string file = __FILE__, size_t line
 
 ///
 struct DerelictJwtSigner {
-    import std.array: Appender;
     import derelict.jwt.jwtfuncs;
     import derelict.jwt.jwttypes: jwt_t;
     import google_api.d.auth.service_account: JwtClaims;
+    import google_api.d.buffer;
 
     private {
-        Appender!(char[ ]) _payload;
+        Buffer _payload;
         jwt_t* _j;
     }
 
@@ -41,11 +41,9 @@ struct DerelictJwtSigner {
 
     ///
     this(scope const(char)[ ] key, int algo = JWT_ALG_RS256) scope @trusted {
-        import std.array: appender;
         import std.conv: to;
 
-        _payload = appender!(char[ ]);
-        _payload.reserve(224);
+        _payload = createBuffer(224);
         jwt_new(&_j)._enforce0("`jwt_new` failed");
         jwt_set_alg(_j, algo, key.ptr, key.length.to!int)._enforce0("`jwt_set_alg` failed");
     }
@@ -71,7 +69,7 @@ struct DerelictJwtSigner {
         // Also, while we could invoke `jwt_add_grant` for string fields, we would have to
         // zero-terminate their values. So it's simpler to just go JSON for everything.
         _payload.clear();
-        _payload.serializeToJson(claims);
+        _payload.sink.serializeToJson(claims);
         _payload ~= '\0';
         jwt_add_grants_json(_j, _payload[ ].ptr)._enforce0("`jwt_add_grants_json` failed");
 
