@@ -5,7 +5,7 @@ public import google_api.d.buffer; ///
 nothrow pure @safe:
 
 /// Like `std.uri.encodeComponent` but does not perform pointless allocations.
-void serializeToUrl(scope ref Buffer b, scope const(char)[ ] s) {
+void serializeAsUrl(scope ref Buffer b, scope const(char)[ ] s) {
     enum hex = "0123456789ABCDEF";
     foreach (c; s)
         switch (c) {
