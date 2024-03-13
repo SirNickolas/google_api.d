@@ -23,6 +23,8 @@ void serializeToUrl(scope ref Buffer b, scope const(char)[ ] s) {
         }
 }
 
+package(google_api) immutable string[2] boolMemberNames = ["false", "true"];
+
 package(google_api) string extract(scope ref Buffer b) {
     immutable s = b.dupData();
     b.clear();
