@@ -11,6 +11,18 @@ inout(char)[ ] validateUtf(return scope inout(ubyte)[ ] data) pure {
     return result;
 }
 
+///
+template ForceConst(T: const T) {
+    static if (is(T == U[ ], U))
+        alias ForceConst = const ForceConst!U[ ];
+    else static if (is(T == U[V], U, V))
+        alias ForceConst = const ForceConst!U[V];
+    else static if (is(T == U*, U))
+        alias ForceConst = const ForceConst!U*;
+    else
+        alias ForceConst = const T;
+}
+
 private template _concat(Args...) {
     import std.meta: Alias;
 

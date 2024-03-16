@@ -19,6 +19,34 @@ pure unittest {
     assertThrown!UTFException(validateUtf([0x80]));
 }
 
+// google_api.d.utils.ForceConst:
+
+static assert(is(ForceConst!int               == const int));
+static assert(is(ForceConst!(const int)       == const int));
+static assert(is(ForceConst!(immutable int)   == const int));
+static assert(is(ForceConst!(inout int)       == const int));
+static assert(is(ForceConst!(inout const int) == const int));
+static assert(is(ForceConst!string               == const char[ ]));
+static assert(is(ForceConst!(const string)       == const char[ ]));
+static assert(is(ForceConst!(immutable string)   == const char[ ]));
+static assert(is(ForceConst!(inout string)       == const char[ ]));
+static assert(is(ForceConst!(inout const string) == const char[ ]));
+static assert(is(ForceConst!(string*)             == const char[ ]*));
+static assert(is(ForceConst!(const string*)       == const char[ ]*));
+static assert(is(ForceConst!(immutable string*)   == const char[ ]*));
+static assert(is(ForceConst!(inout string*)       == const char[ ]*));
+static assert(is(ForceConst!(inout const string*) == const char[ ]*));
+static assert(is(ForceConst!(string[ ])             == const char[ ][ ]));
+static assert(is(ForceConst!(const string[ ])       == const char[ ][ ]));
+static assert(is(ForceConst!(immutable string[ ])   == const char[ ][ ]));
+static assert(is(ForceConst!(inout string[ ])       == const char[ ][ ]));
+static assert(is(ForceConst!(inout const string[ ]) == const char[ ][ ]));
+static assert(is(ForceConst!(string[string])             == const char[ ][string]));
+static assert(is(ForceConst!(const string[string])       == const char[ ][string]));
+static assert(is(ForceConst!(immutable string[string])   == const char[ ][string]));
+static assert(is(ForceConst!(inout string[string])       == const char[ ][string]));
+static assert(is(ForceConst!(inout const string[string]) == const char[ ][string]));
+
 // google_api.d.utils.concat:
 
 nothrow pure unittest {
