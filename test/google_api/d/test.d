@@ -1,8 +1,10 @@
 module google_api.d.test;
 
+import google_api.d.attributes;
 import google_api.d.buffer;
 import google_api.d.http;
 import google_api.d.utils;
+static import google_api.d.test_serialization;
 
 @safe:
 
